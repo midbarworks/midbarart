@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MIDBAR WORKS</title>
+
+    <link rel="preload" href="./Montserrat-Black.woff2" as="font" type="font/woff2" crossorigin>
+
+    <style>
+        @font-face {
+            font-family: 'MontserratLocalBlack';
+            src: url('./Montserrat-Black.woff2') format('woff2');
+            font-weight: 900;
+            font-style: normal;
+            font-display: block;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            overflow: hidden;
+            background-color: rgb(0, 0, 0);
+            color: #fff;
+            font-family: 'MontserratLocalBlack', Arial, sans-serif;
+        }
+
+        .bg {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            background: rgb(var(--bg-r), var(--bg-g), var(--bg-b));
+            z-index: 0;
+            pointer-events: none;
+            contain: layout paint style;
+
+            opacity: 0;
+            animation: bgFadeIn 1.6s ease-out forwards;
+        }
+
+        .line {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 130vw;
+            height: var(--height);
+            background: rgb(var(--r), var(--g), var(--b));
+            opacity: 0.72;
+            filter: blur(28px);
+            transform:
+                translate3d(0, var(--y), 0)
+                translate(-15vw, -50%)
+                scaleY(var(--scale));
+            will-change: transform, background-color;
+            backface-visibility: hidden;
+            contain: layout paint style;
+        }
+
+        .sparkle {
+            position: absolute;
+            left: var(--x);
+            top: var(--y);
+            width: var(--size);
+            height: var(--size);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 1);
+            opacity: var(--opacity);
+            transform:
+                translate3d(-50%, -50%, 0)
+                scale(var(--scale));
+            will-change: opacity, transform;
+            backface-visibility: hidden;
+            contain: layout paint style;
+        }
+
+        .wrap {
+            position: relative;
+            z-index: 1;
+            width: 100vw;
+            height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4vw;
+        }
+
+        .logo {
+            width: 100%;
+            text-align: center;
+            font-size: clamp(4.3rem, 19.8vw, 19.3rem);
+            line-height: 0.91;
+            letter-spacing: -0.05em;
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+            user-select: none;
+            color: #fff;
+
+            opacity: 0;
+            transform: translateY(8px) scale(var(--fit-scale, 1));
+            animation: fadeIn 1.2s ease-out forwards;
+
+            will-change: opacity, transform, color;
+        }
+
+        .logo span {
+            display: block;
+        }
+
+        @keyframes bgFadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(var(--fit-scale, 1));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .wrap {
+                padding: 3vw;
+            }
+
+            .logo {
+                font-size: clamp(3.6rem, 21.5vw, 9.5rem);
+                line-height: 0.93;
+                letter-spacing: -0.06em;
+            }
+
+            .line {
+                width: 140vw;
+                opacity: 0.66;
+                filter: blur(22px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg" id="bg"></div>
+
+    <main class="wrap">
+        <div class="logo" id="logo">
+            <span>MIDBAR</span>
+            <span>WORKS</span>
+        </div>
+    </main>
+
+    <script>
+        const bg = document.getElementById('bg');
+        const logo = document.getElementById('logo');
+
+        const speed = 0.004;
+        const textSpeed = 0.0055;
+
+        const lineCount = 4;
+        const sparkleCount = 28;
+
+        const lines = [];
+        const sparkles = [];
+
+        let baseR = Math.random() * 255;
+        let baseG = Math.random() * 255;
+        let baseB = Math.random() * 255;
+        let baseTR = Math.random() * 255;
+        let baseTG = Math.random() * 255;
+        let baseTB = Math.random() * 255;
+
+        let txR = Math.random() * 255;
+        let txG = Math.random() * 255;
+        let txB = Math.random() * 255;
+        let txTR = Math.random() * 255;
+        let txTG = Math.random() * 255;
+        let txTB = Math.random() * 255;
+
+        const random255 = () => Math.random() * 255;
+        const randomRange = (min, max) => min + Math.random() * (max - min);
+
+        function setBaseTarget() {
+            baseTR = random255();
+            baseTG = random255();
+            baseTB = random255();
+        }
+
+        function setTextTarget() {
+            txTR = random255();
+            txTG = random255();
+            txTB = random255();
+        }
+
+        function createLine() {
+            const el = document.createElement('div');
+            el.className = 'line';
+
+            const line = {
+                el,
+                r: random255(),
+                g: random255(),
+                b: random255(),
+                tr: random255(),
+                tg: random255(),
+                tb: random255(),
+
+                y: randomRange(-10, 110),
+                ty: randomRange(-10, 110),
+
+                scale: randomRange(0.7, 1.5),
+                targetScale: randomRange(0.7, 1.5),
+
+                moveSpeed: randomRange(0.00045, 0.0014),
+                scaleSpeed: randomRange(0.0006, 0.0018)
+            };
+
+            el.style.setProperty('--height', `${randomRange(8, 22)}vh`);
+
+            bg.appendChild(el);
+            lines.push(line);
+        }
+
+        function createSparkle() {
+            const el = document.createElement('div');
+            el.className = 'sparkle';
+
+            const sparkle = {
+                el,
+                life: 0,
+                duration: 0,
+                delay: 0,
+                size: 0
+            };
+
+            resetSparkle(sparkle, true);
+
+            bg.appendChild(el);
+            sparkles.push(sparkle);
+        }
+
+        function resetSparkle(sparkle, first) {
+            sparkle.duration = randomRange(55, 130);
+            sparkle.delay = randomRange(20, 500);
+            sparkle.life = first ? randomRange(0, sparkle.duration) : 0;
+            sparkle.size = randomRange(1.2, 2.8);
+
+            sparkle.el.style.setProperty('--x', `${randomRange(0, 100)}vw`);
+            sparkle.el.style.setProperty('--y', `${randomRange(42, 100)}vh`);
+            sparkle.el.style.setProperty('--size', `${sparkle.size}px`);
+            sparkle.el.style.setProperty('--opacity', 0);
+            sparkle.el.style.setProperty('--scale', 0.4);
+        }
+
+        function setLineColorTarget(line) {
+            line.tr = random255();
+            line.tg = random255();
+            line.tb = random255();
+        }
+
+        function setLineMoveTarget(line) {
+            line.ty = randomRange(-10, 110);
+            line.moveSpeed = randomRange(0.00045, 0.0014);
+        }
+
+        function setLineScaleTarget(line) {
+            line.targetScale = randomRange(0.7, 1.5);
+            line.scaleSpeed = randomRange(0.0006, 0.0018);
+        }
+
+        function fitLogo() {
+            logo.style.setProperty('--fit-scale', 1);
+
+            const width = logo.scrollWidth;
+            const maxWidth = window.innerWidth * 0.94;
+
+            if (width > maxWidth) {
+                logo.style.setProperty('--fit-scale', maxWidth / width);
+            }
+        }
+
+        function animate() {
+            baseR += (baseTR - baseR) * speed;
+            baseG += (baseTG - baseG) * speed;
+            baseB += (baseTB - baseB) * speed;
+
+            if (
+                Math.abs(baseTR - baseR) +
+                Math.abs(baseTG - baseG) +
+                Math.abs(baseTB - baseB) < 3
+            ) {
+                setBaseTarget();
+            }
+
+            bg.style.setProperty('--bg-r', baseR | 0);
+            bg.style.setProperty('--bg-g', baseG | 0);
+            bg.style.setProperty('--bg-b', baseB | 0);
+
+            txR += (txTR - txR) * textSpeed;
+            txG += (txTG - txG) * textSpeed;
+            txB += (txTB - txB) * textSpeed;
+
+            if (
+                Math.abs(txTR - txR) +
+                Math.abs(txTG - txG) +
+                Math.abs(txTB - txB) < 3
+            ) {
+                setTextTarget();
+            }
+
+            logo.style.color = `rgb(${txR | 0}, ${txG | 0}, ${txB | 0})`;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+
+                line.r += (line.tr - line.r) * speed;
+                line.g += (line.tg - line.g) * speed;
+                line.b += (line.tb - line.b) * speed;
+
+                line.y += (line.ty - line.y) * line.moveSpeed;
+                line.scale += (line.targetScale - line.scale) * line.scaleSpeed;
+
+                if (
+                    Math.abs(line.tr - line.r) +
+                    Math.abs(line.tg - line.g) +
+                    Math.abs(line.tb - line.b) < 3
+                ) {
+                    setLineColorTarget(line);
+                }
+
+                if (Math.abs(line.ty - line.y) < 1) {
+                    setLineMoveTarget(line);
+                }
+
+                if (Math.abs(line.targetScale - line.scale) < 0.01) {
+                    setLineScaleTarget(line);
+                }
+
+                line.el.style.setProperty('--r', line.r | 0);
+                line.el.style.setProperty('--g', line.g | 0);
+                line.el.style.setProperty('--b', line.b | 0);
+                line.el.style.setProperty('--y', `${line.y}vh`);
+                line.el.style.setProperty('--scale', line.scale);
+            }
+
+            for (let i = 0; i < sparkles.length; i++) {
+                const sparkle = sparkles[i];
+
+                if (sparkle.delay > 0) {
+                    sparkle.delay--;
+                    continue;
+                }
+
+                sparkle.life++;
+
+                const t = sparkle.life / sparkle.duration;
+
+                if (t >= 1) {
+                    resetSparkle(sparkle, false);
+                    continue;
+                }
+
+                let opacity = t < 0.18
+                    ? t / 0.18
+                    : 1 - ((t - 0.18) / 0.82);
+
+                opacity = Math.max(0, opacity);
+                opacity = opacity * opacity * randomRange(0.45, 0.82);
+
+                const scale = 0.45 + opacity * 1.2;
+
+                sparkle.el.style.setProperty('--opacity', opacity);
+                sparkle.el.style.setProperty('--scale', scale);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        for (let i = 0; i < lineCount; i++) {
+            createLine();
+        }
+
+        for (let i = 0; i < sparkleCount; i++) {
+            createSparkle();
+        }
+
+        window.addEventListener('resize', fitLogo, { passive: true });
+
+        if (document.fonts) {
+            document.fonts.ready.then(fitLogo);
+        } else {
+            window.addEventListener('load', fitLogo);
+        }
+
+        fitLogo();
+        animate();
+    </script>
+</body>
+</html>
